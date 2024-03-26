@@ -1,0 +1,224 @@
+Chapter 5  Web Container
+Web container for Servlet components and JSP components to provide a variety of services and resources needed during operation (such as JNDI, Security, Transactions, JDBC, JavaMail, JCA, EJB , etc.). Management of JSP and Servlet components and Filter, Listener initialization, destruction and other life cycle events.
+Processing requests from the client and returning a response to the client. Handling of different types of requests:
+1)	Servlet Component - The servlet is defined in the application's web.xml using the servlet and servlet-mapping elements to configure the mapping between the request URL and the Servlet class.The web container hands off the request to the Servlet based on the mapping information. instance for processing.
+2)	JSP component - application deployment without enabling pre-compilation, the Web container is first responsible for the JSP converted to Servlet code, compiled into Servlet classes, which are processed by the Servlet class.
+3)	Static resources - requests are ultimately handled by DefaultServlet.
+5.1 HTTP Listener
+The BES application server has the following HTTP listeners by default:
+1)	Two HTTP listeners with the names http-listener-1 and http-listener-2, and one AJP listener with the name ajp-listener-1 are associated with a virtual server with the name server. http-listener-1 listener has no security enabled; http-listener-2 listener has security enabled; ajp-listener-1 has no security enabled and applies to the AJP protocol. http-listener-1 listener is enabled by default. listener-2 listener has security enabled; ajp-listener-1 does None security enabled and applies to the AJP protocol. http-listener-1 listener is enabled by default, and http-listener-2 and ajp-listener-1 listeners are not enabled by default.
+2)	The name admin-listener listener is associated with a virtual server with the name __admin. admin-listener listener does None security enabled by default.
+All of the above listeners use the IP address 0.0.0.0 and the port numbers specified by the BES application server by default: http-listener-1 uses 8080, http-listener-2 uses 8443, ajp-listener-1 uses 8009, and admin-listener uses 1900.
+Access to Web applications deployed on an application server instance:
+1)	Please use the URL http://localhost:8080/ (or https://localhost:8443/ if it is a secure application) plus the context root path specified by the web application to access the application.
+2)	Access http://localhost:1900/console in your broswer.
+5.1.1  Create HTTP Listener
+Each HTTP listener must set the default virtual server. When the host portion of the request URL does not match any of the HTTP listeners associated with the virtual server, the HTTP listener routes the request URL to the default virtual server.
+Note: At least one virtual server should be created before creating a  HTTP listener. Please refer to the Create Virtual Server section.
+Create an HTTP listener in the management console:
+1)	Click the "Web Container"-->"HTTP Listener" node in the left navigation area of the management console to enter the "HTTP Listeners" page.
+2)	Click the “Create” button to enter the Create HTTP listener page, the page can be configured item description:
+Table 5-1 Create HTTP listener configuration items
+Configuration Item	Description	default value
+Name	The name of the listener.	None
+IO mode	Supported options are NIO and AIO.	NIO
+IO Independent 	Only supports NIO mode, if enabled, supports thread pool groups.	Disabled
+Listening Address	Host name or IP address.	0.0.0.0
+Listening Port	The listener listens on the port.	None
+Default Virtual Server	Each virtual server provides a connection between the server and the client through one or more HTTP listeners. When the host portion of the request URL does not match any of the HTTP listeners associated with the virtual server, the HTTP listener routes the request URL to the default virtual server.	server
+Thread Pool(Group) 	Thread pools or thread pool groups related to network listeners.	http-thread-pool
+Status	Listener status.	Enable
+Security	If you are setting up a security listener, check the "Enable" box in the "Security" field. After enabling security, you need to configure the SSL options, which are described in the "SSL Configuration" section.
+Disabled
+Redirect Port	If a request requiring security constraint(such as SSL transport) is received, the server automatically redirects the request to another port which enabled SSL.	None
+JK Enabled	If enabled, it supports AJP protocol and does not support security, otherwise it supports HTTP protocol. 	Disabled
+JK Password	The authentication password for the HTTP server to interact with the application server through the AJP protocol.
+3)	Configure all the properties of the HTTP listener and click "Save" to complete the creation of the HTTP listener.
+5.1.2  Edit the HTTP Listener
+Edit the HTTP listener properties in the management console:
+1)	Click the "Web Container"-->"HTTP Listener" node in the left navigation area of the management console to enter the "HTTP Listeners" page.
+2)	Click the name link of the HTTP listener that you want to edit, and then edit the settings on the Edit HTTP Listener screen:
+a)	The name of the HTTP listener is the display item.
+b)	The default virtual server for the default provided HTTP listener admin-listener is the display item.
+5.1.2.1  General Information
+1)	General information is newer than the configuration that was added at the time of creation:
+Table 5-2 HTTP listener general information configuration items
+Configuration Item	Description	default value
+HTTP2 Protocol	If enabled, use HTTP2 protocol for access. This feature must enable security.	Disabled
+Gmssl	If enabled, the gmssl channel tab page also needs to be configured. Only effective when "Security" is enabled. Default is disabled.	Disabled
+Proxy server name	The address of the front-end proxy server.	None
+Proxy Server port	The port of the front-end proxy server.	None
+For the rest of the general information, see "Create HTTP Listener".
+2)	Request Handling Attributes:
+Table 5-3 General Information Request Processing Attribute Configuration Items
+Configuration Item	Description	default value
+Thread Pool(Group)	Thread pools or thread pool groups related to network listeners.	http-thread-pool
+Acceptor threads	The number of threads used by the server to receive connections. When the IO mode is AIO, the number of receiving threads is fixed at 1. Legal value: 0-2147483647.	1
+Receive Buffer Size	Size of the receive buffer. Legal value: 0-2147483647.	8192
+Send Buffer Size	Size of the send buffer. Legal value: 0-2147483647.	8192
+Max Connections	W When the connection exceeds the maximum number of connections, subsequent connections will no longer be processed. Legal values: -1-2147483647, -1 represents unlimited.	-1
+Connect Timeout	Connection timeout, after which the connection will be closed. Legal value: -1-2147483647, -1 indicates no restriction. Default value: 60000, unit: milliseconds.	60,000
+Max Pending Count	When the maximum number of request connections is reached, the number of large requests allowed to wait will be exceeded, and if exceeded, the request will be rejected. Legal value: -1-2147483647, -1 indicates no restriction.	1024
+TCP NoDelay	If enabled, setting the TCP_NO_DELAY option for the server-side socket can improve performance in most cases.	Enabled
+3)	Keep-Alive property:
+Table 5-4 General Information Keep-Alive Configuration Items
+Configuration Item	Description	default value
+Max Keep Alive Requests	The maximum number of requests that can be accepted before the server closes the connection. Legal values: -1 or an integer between 1 and 2147483647. -1 indicates that there is no limit to the number of requests for long connections, meaning that the server does not actively disconnect. 1 indicates that the connection will be disconnected once, meaning that HTTP/1.0 and HTTP/1.1 long connections are disabled.	100
+Keep-Alive Timeout	The time to wait for the next request before closing the connection. Legal values: -1-2147483647, -1 indicates no limit. Default value: 60, unit: seconds.	60
+4)	Custom Attributes:
+Table 5-5 General Information Custom Attribute Configuration Items
+Configuration Item	Description
+Custom Properties	Add custom attributes, depending on user needs.
+5.1.2.2  HTTP Properties
+1)	HTTP property configuration item:
+Table 5-6 HTTP attribute configuration items
+Configuration Item	Description	default value
+URI Encoding	The character set name used to decode the request URI. Legal value: A valid character set name.	UTF-8
+Response Default Character Encoding	Response parameter encoding character set name. Legal value: A valid character set name.	ISO-8859-1
+DNS Lookup	If enabled, DNS lookup will be used.	Disabled
+Compression
+	Specify using HTTP/1.1 GZIP compression to save server bandwidth. Legal value: on compressed data; off disable compression; force enforces data compression in all cases. 	off
+Compressible Mime Type	List of MINI types allowed for compression, separated by commas. 	text/html,text/xml,text/plain,text/css,text/javascript,application/javascript
+Uncompressed User Agent	Match regular expressions for user proxies that should not use compressed HTTP clients.	None
+Compression Min 	The minimum size of the file when applying compression. Effective when "compression" is set to on. Legal value: -1-2147483647, -1 indicates no restriction.	2048
+HTTP Trace	If disabled, it is less susceptible to cross site scripting attacks.
+Max Post Size 	Allow the maximum length of the request body. Legal value: -1-2147483647, -1 indicates no limit. Default value: 2097152, unit: bytes.	2097152
+Powered By 	If enabled, the server will use xpowered by headers according to Servlet and JSP specifications.	Disabled
+Disable Upload Timeout	If disabled, the connection that slowly reads bytes will be closed when the read request reaches the "connection upload timeout" limit. 	Disabled
+Connection Upload Timeout 	The upload timeout is valid when "disable upload timeout" is disabled. Legal value: 1-2147483647, default value: 300000, unit: milliseconds.	300000
+Maximum Parameters	Maximum number of request parameters. Legal value: -1-2147483647, -1 means no limit.	10000
+requestCharacterEncoding	Request parameter encoding character set name. Legitimate value: valid character set name.	ISO-8859-1
+5.1.2.3  HTTP2 Properties
+1)	HTTP2 property configuration item:
+Table 5-7 HTTP2 Attribute Configuration Items
+Configuration Item	Description	default value
+Compression	Specify using HTTP/2.0 GZIP compression to save server bandwidth. Legal value: on compressed data; off disable compression; force enforces data compression in all cases. 	off
+Compressible Mime Type	List of MINI types allowed for compression, separated by commas. 	text/html,text/xml,text/plain,text/css,text/javascript,application/javascript
+Uncompressed User Agent	Match regular expressions for user proxies that should not use compressed HTTP clients.	None
+Compression Min Size	The minimum size of the file when applying compression. Effective when "compression" is set to on. Legal value: -1-2147483647, -1 indicates no restriction. Default value: 2048, unit: bytes.	2048
+Max Concurrent Stream	Control the maximum number of flows allowed for any connection. When the client attempts to open an active flow that exceeds this value, it is restricted and a flow rejection error occurs. Legal values: -1-2147483647,.	200
+Max Concurrent Stream Execution	Control the maximum number of flows that can be allocated from any connection in the container thread pool. If there are more active flows than available threads, these flows must wait for them to become available. Legal value: -1-2147483647.	200
+Max Header Size	Set the maximum total size of the Header header for the HTTP2 protocol, legal values: -1-2147483647.	8192
+Max Header Count	The maximum number of Header headers allowed by the container in the request header, legal values: -1-2147483647, -1 represents unlimited number.	100
+Max Trailer Size	Set the maximum total size of the Trailer header for the HTTP2 protocol, legal values: -1-2147483647.	8192
+Max Trailer Count	The maximum number of Trailer headers allowed by the container in the request header, legal values: -1-2147483647, -1 represents unlimited number.	100
+Initial Window Size	Control the initial size of the flow control window for the server to send streams to the client. Legal value: -1-2147483647.	65535
+Read Timeout	The time the server waits for more data after receiving partial HTTP/2 frames. Legal value: -1-2147483647, default value: 10000. Unit: milliseconds.	10000
+Write Timeout	The timeout period for the server to wait for other data to be written after writing a portion of HTTP/2 frames. Legal value: -1-2147483647, default value: 10000. Unit: milliseconds.	10000
+2)	Custom Attributes:
+Table 5-8 HTTP2 Attributes Custom Attribute Configuration Items
+Configuration Item	Description
+Custom Properties	Add custom attributes, depending on user needs.
+5.1.2.4  SSL Configuration
+1)	SSL configuration:
+Table 5-9 SSL configuration items
+Configuration Item	Description	default value
+SSL Mode	SSL engine, supported options are JSSE, OpenSSL.	JSSE
+Client Authentication	If enabled, the client must indicate its identity to the server on each request; If not mandatory, the server does not force the client to indicate their identity on each request.	Disabled
+KeyStore Password	The password used to access the private key.	changeit
+Certificate Type	Support for PEM and CER.	CER
+TLS	If enabled, supports TLS protocol.	Enable
+TLS 1.1	If enabled, supports TLS1.1 protocol.	Enable
+TLS 1.2	If enabled, supports TLS1.2 protocol.	Enable
+TLS1.3	If enabled, supports TLS1.3 protocol.	Disabled
+CER	Nickname of Certificate	Aliases for key pairs and certificates. 	bes
+	KeyStore Location	If it is a relative path, then relative to ${com.bes.instanceRoot}.	${com.bes.instanceRoot}/conf/security/keystore.jks
+	Key Store Password	The password used to access the certificate. The default password for keystore.jks is changeit.	changeit
+	Key Store Type	The type of certificate used by the server. The default keystore.jks type is JKS.	JKS
+	Trust Store Path	If it is a relative path, then relative to ${com.bes.instanceRoot}.	${com.bes.instanceRoot}/conf/security/cacerts.jks
+	Trust Store Password	TrustStore Password.	changeit
+	Trust Store Typ	The type of certificate used by the server. The default cacerts.jks type is JKS.	JKS
+PEM	Certificate File	A certificate file of type PEM relative to ${com.bes.instanceRoot} if it is a relative path.	${com.bes.instanceRoot}/conf/security/cert.pem
+	Certificate Key File	A certificate key file of type PEN, relative to ${com.bes.instanceRoot} if it is a relative path.	${com.bes.instanceRoot}/conf/security/key.pem
+	Certificate Chain File	A certificate chain file of type PEM relative to ${com.bes.instanceRoot} if it is a relative path.	${com.bes.instanceRoot}/conf/security/chain.pem
+5.1.2.5  GMSSL
+1)	Gmssl:
+Table 5-10 Gmssl Configuration Items
+Configuration Item	Description	default value
+Client Authentication	Whether to force clients to authenticate themselves to the server when using this server.	Disabled
+Nickname of Certificate	Aliases for key pairs and certificates.	bes
+KeyStore Location	KeyStore file path, support absolute path and relative path, the relative path is based on the root directory of the current instance ${com.bes.instanceRoot}.	${com.bes.instanceRoot}/conf/security/keystore.bks
+KeyStore Password 	The password used to access the private key.	changeit
+Key Store Password 	The password used to access the certificate.	changeit
+5.1.3  Delete HTTP Listener
+Remove the HTTP listener from the management console:
+1)	Click on the "Web Container" node in the left navigation area of the Management Console.
+2)	Click the "HTTP Listener" node to enter the "HTTP Listener List" page, check the HTTP listener you want to delete, and click the "Delete" button to delete the HTTP listener.
+Note: The server's default HTTP listener, admin-listener, does not support the delete operation.
+5.2 Virtual Server
+A virtual server is a set of hostnames for a BES application server. When using Virtual Server, one or more hostnames mapped to IP addresses are specified using DNS. Virtual servering is support for hosting multiple web applications on a single physical server, and outside access to the applications on the virtual server is as if the applications had separate hosts.
+For example, host the following domains on a physical server: www.aaa.com, www.bbb.com, www.ccc.com; also assume www.aaa.com, www.bbb.com和www.ccc.com  web1, web2, and web3. The physical server will process the the following URLs:
+http://www.aaa.com:8080/web1
+http://www.bbb.com:8080/web2
+http://www.ccc.com:8080/web3
+1)	The first URL will be mapped to the virtual server www.aaa.com, the second URL will be mapped to the virtual server www.bbb.com and the third URL will be mapped to the virtual server www.ccc.com.
+2)	On the other hand, if no information is provided to www.bbb.com注册web3, http://www.bbb.com:8080/web3将导致404返回码.
+3)	Ensure that www.aaa.com and www.bbb.com和www.ccc.com均可解析为物理服务器的IP地址 must register the above domains with the network DNS server.
+4)	On UNIX systems, the domain name should be added to the /etc/hosts file (if the hosts setting in the /etc/nsswitch.conf file includes files).
+The following Virtual Server are automatically started when you start a BES application server instance:
+1)	The virtual server with the name server hosts all user-defined web modules.
+2)	Virtual server with name __admin: hosts all administration-related web modules (administration console). This virtual server is a restricted server and does not support deployment of web modules to this virtual server.
+Developing, testing, and deploying Web applications in non-production environments usually uses server Virtual Server. In production environments, a user-defined virtual server is used to simulate the functionality of a physical server providing separate Web servers for different users.
+5.2.1  Create Virtual Server
+Create a  virtual server in the management console:
+1)	Click the "Web Container" --> "Virtual Server" node in the left navigation area of the management console to enter the "Virtual Server List" page.
+2)	Click the “Create” button to enter the "Create Virtual server" page, the page can be configured to Description the item:
+Table 5-11 Create Virtual server Configuration Items
+Configuration Item	Description	default value
+Virtual Server Name	A unique name for the virtual server. Used to internally identify the virtual server and also provided to HTTP clients.	None
+Virtual Server Alias	Host name or IP address, multiple separated by commas.	None
+State	Set the state of the virtual server, the available values are "On", "Off" or "Disable". "On" is to make the virtual server active during reboot; "Off" is to make the virtual server inactive, clients will receive 404 status code when accessing the virtual server in closed state; "Disable "Disabled" is to set the virtual server in an inactive state, which will return a 403 status code to the client.	Enable
+Access Logging	Default value: "Controlled by HTTP Service", which means that the access log configuration of the virtual host uses the configuration of access logs in the web container.	Controlled HTTP service
+SSO Enable	Single Sign-On for Virtual Server. Single Sign-On is disabled for Virtual Server and users must authenticate separately for each application on the virtual server; Servlets and JSP pages support cross-application Single Sign-On on the BES application server; enabling Single Sign-On will allow the same user's login information to be shared across multiple applications without the user having to Enabling "single sign-on" will allow the same user's login information to be shared across multiple applications so that users don't have to login separately for each application.	Disabled
+Cookie Domain Name	Domain name for single sign-on, this configuration is valid when single sign-on is enabled.	None
+Allow Remote Address	The remote address that allowed to access the virtual server.	None
+Deny Remote Address	The remote address that denied to access the virtual server.	None
+Deploying HTTP listeners	Displays the HTTP listener associated with the virtual server. The HTTP listener area is allowed to be empty when you create a  virtual server. When you create an HTTP listener to bind this virtual server, the system will automatically bind the HTTP listener in this property of the virtual server.	None
+3)	Configure all the properties of the virtual server and click the "Save" button to complete the creation of the virtual server.
+5.2.2  Edit Virtual server
+Edit the virtual server in the management console:
+1)	Click the "Web Container" --> "Virtual Server" node in the left navigation area of the management console to enter the "Virtual Server List" page.
+2)	Click the name link of the virtual server you want to edit, and then go to the "Edit virtual server" page to modify the settings:
+a)	The virtual server name is the display item.
+5.2.2.1  General Configuration
+1)	The base configuration is newer than the configuration that was added at the time of creation:
+Table 5-12 Virtual server General Configuration Items
+Configuration Item	Description	default value
+Log File Name	Access log file name, specified as virtualServerName_access_log when creating a new virtual server.	server_access_log
+For other configuration items, please refer to the "Create Virtual server" section.
+Modify the values of the virtual server properties and click the "Save" button to save the modified properties.
+5.2.2.2  Advanced Configuration
+1)	Request an alert configuration item:
+Table 5  12 Virtual server Request Alert Configuration Items
+Configuration Item	Description	default value
+Alarm Timeout of Stuck Request	The number of seconds after which BES will warn that the request is still processed or stuck. Default is 0 second which means that BES will not warn in any case. Legal value: 0-2147483647.	0
+Request warning check interval	The time interval for detecting whether the request thread has timeout, valid values: 1-2147483647. Default value: 10, unit: seconds.	10
+5.2.3  Delete Virtual server
+Prerequisites for deleting a virtual server: unbind all HTTP listeners to this virtual server, unbind web applications or enterprise applications to this virtual server.
+Delete the virtual server in the management console:
+1)	Click on the "Web Container" node in the left navigation area of the Management Console.
+2)	Unbinds the listener from the virtual server:
+Click the "HTTP Listener" node to enter the "HTTP Listener List" page:
+a)	The first scenario: Modify the default virtual server of the HTTP listener bound to this virtual server to another customized virtual server.
+b)	The second scenario: Delete the HTTP listener bound to this virtual server, check the HTTP listener to be deleted, click the "Delete" button to delete the HTTP listener.
+3)	Unbind the application from the virtual server:
+a)	Click the "Hot Apps" node to enter the "Hot Apps List" screen.
+b)	Click the Web Application or Enterprise Application name link to enter the Edit Application page, and then change the application's virtual server to another virtual server.
+4)	Unbind the auto-deploy configuration from the virtual server:
+a)	Click the Auto Deployment Configuration node to enter the Auto Deployment Configuration page.
+b)	Modify the virtual server to another virtual server.
+5)	Click the "Virtual Server" node to enter the "Virtual Server List" page, check the Virtual Server you want to delete, and click the "Delete" button to delete the Virtual Server.
+Attention:
+1)	The server's default virtual server __admin does not support delete operations.
+2)	If the virtual server is not unbound from HTTP listener, application, and auto-deployment, the management console disables the virtual server deletion operation.
+View the list of Thread Pools in the Management Console:
+1)	Click "Web Container"-->"Thread Pool" in the left navigation area of the management console, and the Thread Pools list page will be displayed on the right side.
+2)	To view the details of a Thread Pool: click on the "Thread Pool Name" link for the Thread Pool.
+Create a  Thread Pool in the management console:
+1)	Click "Web Container" -> "Thread Pool" in the left navigation area of the Management Console.
+2)	On the right side of the Thread Pool list page, click the “Create” button to enter the Create Thread Pool page, you can configure the item description:
+Edit the Thread Pool in the management console:
+1)	Click "Web Container" -> "Thread Pools" in the left navigation area of the Management Console.
+2)	On the right side of the Thread Pool list page, click the "Thread Pool Name" link of the Thread Pool to enter the Edit Thread Pool page, and refer to "Create Thread Pool" for the configuration item. The "Thread Pool Name" configuration item is displayed.
+3)	Modify the properties of the Thread Pool and click the "Save" button to save the modified properties.
+4)	The "Restore Defaults" button restores the default configuration items provided by the BES Application Server.
